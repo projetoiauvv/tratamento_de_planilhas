@@ -115,10 +115,15 @@ h1 { margin: 0 0 6px; font-size: 26px; }
   border-top: 1px solid var(--border);
 }
 
+.other-sector-input {
+  grid-column: 2;
+}
+
 .field-label { font-size: 15px; }
 .req { color: var(--req); font-weight: 700; margin-left: 2px; }
 
-select {
+select,
+input[type="text"] {
   width: 100%;
   padding: 9px 10px;
   border: 1px solid var(--border);
@@ -128,8 +133,10 @@ select {
   color: var(--text);
   cursor: pointer;
 }
-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
-select.invalid { border-color: var(--req); }
+select:focus,
+input[type="text"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+select.invalid,
+input[type="text"].invalid { border-color: var(--req); }
 
 .legend { margin: 14px 4px 0; font-size: 13px; color: var(--muted); }
 
@@ -175,4 +182,5 @@ select.invalid { border-color: var(--req); }
 
 @media (max-width: 560px) {
   .map-row, .table-head { grid-template-columns: 1fr; gap: 6px; }
+  .other-sector-input { grid-column: 1; }
 }

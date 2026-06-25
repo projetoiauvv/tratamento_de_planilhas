@@ -97,6 +97,7 @@
         setores.forEach((s) =>
           select.appendChild(makeOption(s.value, s.label))
         );
+        select.addEventListener("change", () => toggleOtherSectorInput(row, select));
       } else {
         // Colunas do arquivo enviado.
         select.appendChild(makeOption("", "Selecione uma coluna"));
@@ -110,8 +111,29 @@
 
       row.appendChild(label);
       row.appendChild(select);
+      if (field.type === "setor") {
+        const otherInput = document.createElement("input");
+        otherInput.type = "text";
+        otherInput.className = "other-sector-input hidden";
+        otherInput.dataset.key = "setor_outros";
+        otherInput.placeholder = "Digite o nome do setor";
+        otherInput.maxLength = 80;
+        otherInput.addEventListener("input", () => otherInput.classList.remove("invalid"));
+        row.appendChild(otherInput);
+      }
       mapRows.appendChild(row);
     });
+  }
+
+  function toggleOtherSectorInput(row, select) {
+    const input = row.querySelector('input[data-key="setor_outros"]');
+    if (!input) return;
+    const show = select.value === "OUTROS";
+    input.classList.toggle("hidden", !show);
+    if (!show) {
+      input.value = "";
+      input.classList.remove("invalid");
+    }
   }
 
   // Tenta pré-selecionar uma coluna com nome parecido com o campo.
@@ -145,6 +167,7 @@
     const selects = mapRows.querySelectorAll("select");
     const mapping = {};
     let setor = "";
+    let setorOutros = "";
     let valid = true;
 
     selects.forEach((sel) => {
@@ -157,6 +180,14 @@
         if (field.required && !setor) {
           sel.classList.add("invalid");
           valid = false;
+        }
+        if (setor === "OUTROS") {
+          const otherInput = sel.closest(".map-row").querySelector('input[data-key="setor_outros"]');
+          setorOutros = otherInput ? otherInput.value.trim() : "";
+          if (!setorOutros) {
+            if (otherInput) otherInput.classList.add("invalid");
+            valid = false;
+          }
         }
       } else {
         if (sel.value) mapping[key] = sel.value;
@@ -180,7 +211,7 @@
       const res = await fetch("/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file_id: state.fileId, mapping, setor }),
+        body: JSON.stringify({ file_id: state.fileId, mapping, setor, setor_outros: setorOutros }),
       });
 
       if (!res.ok) {

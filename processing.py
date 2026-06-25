@@ -39,7 +39,10 @@ SETORES = [
     {"label": "Nace", "value": "NACE"},
     {"label": "Policlínica", "value": "POLICLINICA"},
     {"label": "Hospital veterinário", "value": "VETERINARIO"},
+    {"label": "Outros", "value": "OUTROS"},
 ]
+
+SETOR_OUTROS_VALUE = "OUTROS"
 
 
 def read_table(path: str) -> pd.DataFrame:
@@ -128,6 +131,11 @@ def tratar_sobrenome(value) -> str:
         return ""
     resto = texto.split(" ", 1)[1].strip()  # DIREITA(...) + ARRUMAR
     return _pri_maiuscula(resto)
+
+
+def normalizar_setor_outros(value) -> str:
+    """Normaliza o setor digitado pelo usuário quando a opção Outros é usada."""
+    return _to_text(value).strip().upper()
 
 
 def process_dataframe(df: pd.DataFrame, mapping: dict, setor: str) -> pd.DataFrame:
