@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tratamento de Planilhas</title>
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Tratamento de Planilhas</h1>
+      <p class="subtitle">
+        Envie um arquivo <strong>.csv</strong> ou <strong>.xlsx</strong>, mapeie as colunas
+        e baixe a planilha tratada diretamente nesta página.
+      </p>
+    </header>
+
+    <section id="step-upload" class="card">
+      <h2><span class="step-num">1</span> Enviar arquivo</h2>
+      <div id="dropzone" class="dropzone">
+        <input type="file" id="file-input" accept=".csv,.xlsx,.xls" hidden />
+        <p class="dz-text">Arraste o arquivo aqui ou <button type="button" id="browse-btn" class="link-btn">selecione</button></p>
+        <p class="dz-hint">Formatos aceitos: CSV, XLSX, XLS &middot; processamento feito no navegador</p>
+      </div>
+      <div id="file-info" class="file-info hidden"></div>
+    </section>
+
+    <section id="step-map" class="card hidden">
+      <h2><span class="step-num">2</span> Mapear colunas</h2>
+      <div class="table-head">
+        <span class="th-left">Campos do modelo</span>
+        <span class="th-right">Colunas do seu arquivo</span>
+      </div>
+      <div id="map-rows"></div>
+      <p class="legend"><span class="req">*</span> campo obrigatório</p>
+      <div class="treatment-rules">
+        <strong>Tratamentos feitos no site:</strong>
+        <ul>
+          <li>Nome completo vira <strong>Nome</strong> e <strong>Sobrenome</strong>.</li>
+          <li>Whatsapp remove +, espaços, parênteses e hífen, e adiciona 55 quando faltar.</li>
+          <li>Setor grava o valor padronizado ou o texto digitado em Outros.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="step-preview" class="card hidden">
+      <h2><span class="step-num">3</span> Pré-visualizar no site</h2>
+      <p class="subtitle">Confira as primeiras linhas já tratadas antes de baixar a planilha.</p>
+      <button type="button" id="preview-btn" class="secondary-btn">Ver prévia tratada</button>
+      <div id="preview-area" class="preview-area hidden"></div>
+    </section>
+
+    <section id="step-process" class="card hidden">
+      <h2><span class="step-num">4</span> Gerar planilha tratada</h2>
+      <button type="button" id="process-btn" class="primary-btn">Tratar e baixar (.xlsx)</button>
+    </section>
+
+    <div id="message" class="message hidden"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="static/js/browser-app.js"></script>
+</body>
+</html>
