@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tratamento de Planilhas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Tratamento de Planilhas</h1>
+      <p class="subtitle">
+        Envie um arquivo <strong>.csv</strong> ou <strong>.xlsx</strong>, mapeie as colunas
+        e baixe a planilha tratada.
+      </p>
+    </header>
+
+    <!-- Etapa 1: upload -->
+    <section id="step-upload" class="card">
+      <h2><span class="step-num">1</span> Enviar arquivo</h2>
+      <div id="dropzone" class="dropzone">
+        <input type="file" id="file-input" accept=".csv,.xlsx,.xls" hidden />
+        <p class="dz-text">Arraste o arquivo aqui ou <button type="button" id="browse-btn" class="link-btn">selecione</button></p>
+        <p class="dz-hint">Formatos aceitos: CSV, XLSX, XLS &middot; até 25 MB</p>
+      </div>
+      <div id="file-info" class="file-info hidden"></div>
+    </section>
+
+    <!-- Etapa 2: mapeamento -->
+    <section id="step-map" class="card hidden">
+      <h2><span class="step-num">2</span> Mapear colunas</h2>
+      <div class="table-head">
+        <span class="th-left">Campos do modelo</span>
+        <span class="th-right">Colunas do seu arquivo</span>
+      </div>
+      <div id="map-rows"></div>
+      <p class="legend"><span class="req">*</span> campo obrigatório</p>
+    </section>
+
+    <!-- Etapa 3: processar -->
+    <section id="step-process" class="card hidden">
+      <h2><span class="step-num">3</span> Gerar planilha tratada</h2>
+      <button type="button" id="process-btn" class="primary-btn">Tratar e baixar (.xlsx)</button>
+    </section>
+
+    <div id="message" class="message hidden"></div>
+  </div>
+
+  <!-- Dados injetados pelo backend -->
+  <script>
+    window.APP_DATA = {
+      targetFields: {{ target_fields | tojson }},
+      setores: {{ setores | tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
