@@ -23,8 +23,10 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from processing import (
+    SETOR_OUTROS_VALUE,
     SETORES,
     TARGET_FIELDS,
+    normalizar_setor_outros,
     process_dataframe,
     read_table,
 )
@@ -104,6 +106,7 @@ def process():
     file_id = data.get("file_id")
     mapping = data.get("mapping") or {}
     setor = data.get("setor")
+    setor_outros = data.get("setor_outros")
 
     if not file_id:
         return jsonify({"error": "Sessão inválida. Envie o arquivo novamente."}), 400
@@ -130,6 +133,12 @@ def process():
         errors.append("O campo 'Setor' é obrigatório.")
     elif setor not in valid_setores:
         errors.append("Setor inválido.")
+    elif setor == SETOR_OUTROS_VALUE:
+        setor_personalizado = normalizar_setor_outros(setor_outros)
+        if not setor_personalizado:
+            errors.append("Digite o nome do setor quando selecionar 'Outros'.")
+        else:
+            setor = setor_personalizado
 
     if errors:
         return jsonify({"error": " ".join(errors)}), 400
