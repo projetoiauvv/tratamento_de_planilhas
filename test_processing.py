@@ -85,6 +85,12 @@ def test_process_dataframe():
     assert out.loc[1, "Sobrenome"] == ""
 
 
+def test_normalizar_setor_outros():
+    from processing import normalizar_setor_outros
+
+    assert normalizar_setor_outros("  atendimento especial ") == "ATENDIMENTO ESPECIAL"
+    assert normalizar_setor_outros(None) == ""
+
 if __name__ == "__main__":
     import sys
 
