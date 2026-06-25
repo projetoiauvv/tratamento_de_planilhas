@@ -36,11 +36,27 @@
       </div>
       <div id="map-rows"></div>
       <p class="legend"><span class="req">*</span> campo obrigatório</p>
+      <div class="treatment-rules">
+        <strong>Tratamentos feitos no site:</strong>
+        <ul>
+          <li>Nome completo vira <strong>Nome</strong> e <strong>Sobrenome</strong>.</li>
+          <li>Whatsapp remove caracteres como +, espaços, parênteses e hífen, e adiciona 55 quando faltar.</li>
+          <li>Setor grava o valor padronizado ou o texto digitado em Outros.</li>
+        </ul>
+      </div>
     </section>
 
-    <!-- Etapa 3: processar -->
+    <!-- Etapa 3: prévia -->
+    <section id="step-preview" class="card hidden">
+      <h2><span class="step-num">3</span> Pré-visualizar no site</h2>
+      <p class="subtitle">Confira as primeiras linhas já tratadas antes de baixar a planilha.</p>
+      <button type="button" id="preview-btn" class="secondary-btn">Ver prévia tratada</button>
+      <div id="preview-area" class="preview-area hidden"></div>
+    </section>
+
+    <!-- Etapa 4: processar -->
     <section id="step-process" class="card hidden">
-      <h2><span class="step-num">3</span> Gerar planilha tratada</h2>
+      <h2><span class="step-num">4</span> Gerar planilha tratada</h2>
       <button type="button" id="process-btn" class="primary-btn">Tratar e baixar (.xlsx)</button>
     </section>
 
