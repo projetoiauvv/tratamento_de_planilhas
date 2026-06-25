@@ -14,6 +14,7 @@ planilha já tratada.
   - **Curso** *(opcional)*.
   - **e-mail** *(opcional)*.
 - Pré-seleção automática de colunas com nomes parecidos.
+- Pré-visualização no site das primeiras linhas já tratadas antes do download.
 - Saída em `.xlsx` com as colunas: `Nome`, `Sobrenome`, `Whatsapp`, `Setor`,
   `Curso`, `E-mail`.
 
@@ -55,6 +56,7 @@ Sobrenome = PRI.MAIÚSCULA(ARRUMAR(DIREITA(C2;NÚM.CARACT(C2)-PROCURAR(" ";C2)))
 | Nace                   | `NACE`        |
 | Policlínica            | `POLICLINICA` |
 | Hospital veterinário   | `VETERINARIO` |
+| Outros                 | texto digitado em maiúsculas |
 
 ## Como executar
 

@@ -8,8 +8,11 @@
   const dropzone = document.getElementById("dropzone");
   const fileInfo = document.getElementById("file-info");
   const stepMap = document.getElementById("step-map");
+  const stepPreview = document.getElementById("step-preview");
   const stepProcess = document.getElementById("step-process");
   const mapRows = document.getElementById("map-rows");
+  const previewBtn = document.getElementById("preview-btn");
+  const previewArea = document.getElementById("preview-area");
   const processBtn = document.getElementById("process-btn");
   const messageEl = document.getElementById("message");
 
@@ -67,7 +70,10 @@
         data.columns.length + " colunas, " + data.row_count + " linhas.";
       buildMapping();
       stepMap.classList.remove("hidden");
+      stepPreview.classList.remove("hidden");
       stepProcess.classList.remove("hidden");
+      previewArea.classList.add("hidden");
+      previewArea.innerHTML = "";
     } catch (err) {
       fileInfo.classList.add("hidden");
       showMessage(err.message, "error");
@@ -107,7 +113,10 @@
         autoSelect(select, field);
       }
 
-      select.addEventListener("change", () => select.classList.remove("invalid"));
+      select.addEventListener("change", () => {
+        select.classList.remove("invalid");
+        resetPreview();
+      });
 
       row.appendChild(label);
       row.appendChild(select);
@@ -118,7 +127,10 @@
         otherInput.dataset.key = "setor_outros";
         otherInput.placeholder = "Digite o nome do setor";
         otherInput.maxLength = 80;
-        otherInput.addEventListener("input", () => otherInput.classList.remove("invalid"));
+        otherInput.addEventListener("input", () => {
+          otherInput.classList.remove("invalid");
+          resetPreview();
+        });
         row.appendChild(otherInput);
       }
       mapRows.appendChild(row);
@@ -159,11 +171,7 @@
     return opt;
   }
 
-  // ---------- Processamento ----------
-  processBtn.addEventListener("click", processFile);
-
-  async function processFile() {
-    clearMessage();
+  function getPayload() {
     const selects = mapRows.querySelectorAll("select");
     const mapping = {};
     let setor = "";
@@ -198,6 +206,69 @@
       }
     });
 
+    return { valid, payload: { file_id: state.fileId, mapping, setor, setor_outros: setorOutros } };
+  }
+
+  function resetPreview() {
+    if (!previewArea) return;
+    previewArea.classList.add("hidden");
+    previewArea.innerHTML = "";
+  }
+
+  // ---------- Pré-visualização ----------
+  previewBtn.addEventListener("click", previewFile);
+
+  async function previewFile() {
+    clearMessage();
+    const { valid, payload } = getPayload();
+    if (!valid) {
+      showMessage("Preencha todos os campos obrigatórios (*) para ver a prévia.", "error");
+      return;
+    }
+
+    previewBtn.disabled = true;
+    const originalLabel = previewBtn.textContent;
+    previewBtn.innerHTML = '<span class="spinner dark-spinner"></span>Gerando prévia…';
+
+    try {
+      const res = await fetch("/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao gerar prévia.");
+      renderPreview(data);
+    } catch (err) {
+      showMessage(err.message, "error");
+    } finally {
+      previewBtn.disabled = false;
+      previewBtn.textContent = originalLabel;
+    }
+  }
+
+  function renderPreview(data) {
+    const rows = data.rows || [];
+    const columns = data.columns || [];
+    const thead = "<thead><tr>" + columns.map((c) => "<th>" + escapeHtml(c) + "</th>").join("") + "</tr></thead>";
+    const tbody = "<tbody>" + rows.map((row) => {
+      return "<tr>" + row.map((cell) => "<td>" + escapeHtml(cell) + "</td>").join("") + "</tr>";
+    }).join("") + "</tbody>";
+
+    previewArea.innerHTML =
+      '<p class="preview-count">Prévia de até 10 linhas tratadas. Total no arquivo: ' +
+      Number(data.total_rows || 0).toLocaleString("pt-BR") +
+      " linhas.</p>" +
+      '<div class="preview-table-wrap"><table class="preview-table">' + thead + tbody + "</table></div>";
+    previewArea.classList.remove("hidden");
+  }
+
+  // ---------- Processamento ----------
+  processBtn.addEventListener("click", processFile);
+
+  async function processFile() {
+    clearMessage();
+    const { valid, payload } = getPayload();
     if (!valid) {
       showMessage("Preencha todos os campos obrigatórios (*).", "error");
       return;
@@ -211,7 +282,7 @@
       const res = await fetch("/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file_id: state.fileId, mapping, setor, setor_outros: setorOutros }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
