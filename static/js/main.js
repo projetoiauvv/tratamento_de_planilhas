@@ -3,6 +3,7 @@
 
   const { targetFields, setores } = window.APP_DATA;
 
+  const modeInputs = document.querySelectorAll('input[name="base-mode"]');
   const fileInput = document.getElementById("file-input");
   const browseBtn = document.getElementById("browse-btn");
   const dropzone = document.getElementById("dropzone");
@@ -16,7 +17,18 @@
   const processBtn = document.getElementById("process-btn");
   const messageEl = document.getElementById("message");
 
-  let state = { fileId: null, columns: [] };
+  let state = { fileId: null, columns: [], mode: getSelectedMode() };
+
+  modeInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      state.mode = getSelectedMode();
+      clearMessage();
+      resetPreview();
+      if (state.fileId) {
+        prepareFlowAfterUpload();
+      }
+    });
+  });
 
   // ---------- Mensagens ----------
   function showMessage(text, type) {
@@ -65,15 +77,11 @@
 
       state.fileId = data.file_id;
       state.columns = data.columns;
+      state.mode = getSelectedMode();
       fileInfo.innerHTML =
         "✓ <strong>" + escapeHtml(data.filename) + "</strong> — " +
         data.columns.length + " colunas, " + data.row_count + " linhas.";
-      buildMapping();
-      stepMap.classList.remove("hidden");
-      stepPreview.classList.remove("hidden");
-      stepProcess.classList.remove("hidden");
-      previewArea.classList.add("hidden");
-      previewArea.innerHTML = "";
+      prepareFlowAfterUpload();
     } catch (err) {
       fileInfo.classList.add("hidden");
       showMessage(err.message, "error");
@@ -81,6 +89,19 @@
   }
 
   // ---------- Mapeamento ----------
+  function prepareFlowAfterUpload() {
+    const isHubspot = state.mode === "hubspot";
+    stepMap.classList.toggle("hidden", isHubspot);
+    if (isHubspot) {
+      mapRows.innerHTML = "";
+    } else {
+      buildMapping();
+    }
+    stepPreview.classList.remove("hidden");
+    stepProcess.classList.remove("hidden");
+    resetPreview();
+  }
+
   function buildMapping() {
     mapRows.innerHTML = "";
     targetFields.forEach((field) => {
@@ -171,7 +192,16 @@
     return opt;
   }
 
+  function getSelectedMode() {
+    const selected = document.querySelector('input[name="base-mode"]:checked');
+    return selected ? selected.value : "hubspot";
+  }
+
   function getPayload() {
+    if (state.mode === "hubspot") {
+      return { valid: true, payload: { file_id: state.fileId, mode: "hubspot", mapping: {}, setor: "COMERCIAL", setor_outros: "" } };
+    }
+
     const selects = mapRows.querySelectorAll("select");
     const mapping = {};
     let setor = "";
@@ -206,7 +236,7 @@
       }
     });
 
-    return { valid, payload: { file_id: state.fileId, mapping, setor, setor_outros: setorOutros } };
+    return { valid, payload: { file_id: state.fileId, mode: state.mode, mapping, setor, setor_outros: setorOutros } };
   }
 
   function resetPreview() {

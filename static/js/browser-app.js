@@ -22,6 +22,7 @@
     { label: "Outros", value: "OUTROS" },
   ];
 
+  const modeInputs = document.querySelectorAll('input[name="base-mode"]');
   const fileInput = document.getElementById("file-input");
   const browseBtn = document.getElementById("browse-btn");
   const dropzone = document.getElementById("dropzone");
@@ -35,7 +36,18 @@
   const processBtn = document.getElementById("process-btn");
   const messageEl = document.getElementById("message");
 
-  let state = { filename: "", columns: [], rows: [] };
+  let state = { filename: "", columns: [], rows: [], mode: getSelectedMode() };
+
+  modeInputs.forEach((input) => {
+    input.addEventListener("change", () => {
+      state.mode = getSelectedMode();
+      clearMessage();
+      resetPreview();
+      if (state.rows.length) {
+        prepareFlowAfterLoad();
+      }
+    });
+  });
 
   browseBtn.addEventListener("click", () => fileInput.click());
   fileInput.addEventListener("change", () => {
@@ -82,19 +94,36 @@
 
       const columns = Object.keys(rows[0]).map((column) => String(column).trim());
       if (!columns.length) throw new Error("O arquivo não possui colunas válidas.");
+      const normalizedRows = rows.map((row) => {
+        const normalized = {};
+        Object.entries(row).forEach(([key, value]) => {
+          normalized[String(key).trim()] = value;
+        });
+        return normalized;
+      });
 
-      state = { filename: file.name, columns, rows };
+      state = { filename: file.name, columns, rows: normalizedRows, mode: getSelectedMode() };
       fileInfo.innerHTML =
         "✓ <strong>" + escapeHtml(file.name) + "</strong> — " +
         columns.length + " colunas, " + rows.length + " linhas.";
-      buildMapping();
-      stepMap.classList.remove("hidden");
-      stepPreview.classList.remove("hidden");
-      stepProcess.classList.remove("hidden");
+      prepareFlowAfterLoad();
     } catch (err) {
       fileInfo.classList.add("hidden");
       showMessage(err.message, "error");
     }
+  }
+
+  function prepareFlowAfterLoad() {
+    const isHubspot = state.mode === "hubspot";
+    stepMap.classList.toggle("hidden", isHubspot);
+    if (isHubspot) {
+      mapRows.innerHTML = "";
+      validateHubspotColumns(false);
+    } else {
+      buildMapping();
+    }
+    stepPreview.classList.remove("hidden");
+    stepProcess.classList.remove("hidden");
   }
 
   function buildMapping() {
@@ -145,7 +174,16 @@
     });
   }
 
+  function getSelectedMode() {
+    const selected = document.querySelector('input[name="base-mode"]:checked');
+    return selected ? selected.value : "hubspot";
+  }
+
   function getPayload() {
+    if (state.mode === "hubspot") {
+      return { valid: validateHubspotColumns(true), mapping: {}, setor: "COMERCIAL" };
+    }
+
     const selects = mapRows.querySelectorAll("select");
     const mapping = {};
     let setor = "";
@@ -185,6 +223,10 @@
   }
 
   function processRows(mapping, setor) {
+    if (state.mode === "hubspot") {
+      return processHubspotRows();
+    }
+
     return state.rows.map((row) => {
       const nomeCompleto = row[mapping.nome_completo];
       return {
@@ -196,6 +238,39 @@
         "E-mail": mapping.email ? toText(row[mapping.email]) : "",
       };
     });
+  }
+
+  function processHubspotRows() {
+    return state.rows.map((row) => ({
+      Nome: priMaiuscula(toText(row["Nome"]).trim()),
+      Sobrenome: priMaiuscula(toText(row["Sobrenome"]).trim()),
+      Whatsapp: tratarWhatsapp(row["Número de telefone"]),
+      Setor: "COMERCIAL",
+      Curso: toText(row["Nome do Curso"]),
+      "E-mail": toText(row["E-mail"]),
+      "Proprietário do negócio": toText(row["Proprietário do negócio"]),
+      "Id Hub": toText(row["Negócio ID"]),
+    }));
+  }
+
+  function validateHubspotColumns(showError) {
+    const requiredColumns = [
+      "Nome",
+      "Sobrenome",
+      "Número de telefone",
+      "E-mail",
+      "Nome do Curso",
+      "Proprietário do negócio",
+      "Negócio ID",
+    ];
+    const missing = requiredColumns.filter((column) => !state.columns.includes(column));
+    if (missing.length) {
+      if (showError) {
+        showMessage("A base HubSpot precisa conter estas colunas: " + missing.join(", ") + ".", "error");
+      }
+      return false;
+    }
+    return true;
   }
 
   previewBtn.addEventListener("click", () => {
@@ -226,7 +301,9 @@
 
   function renderPreview(rows) {
     const previewRows = rows.slice(0, 10);
-    const columns = ["Nome", "Sobrenome", "Whatsapp", "Setor", "Curso", "E-mail"];
+    const columns = state.mode === "hubspot"
+      ? ["Nome", "Sobrenome", "Whatsapp", "Setor", "Curso", "E-mail", "Proprietário do negócio", "Id Hub"]
+      : ["Nome", "Sobrenome", "Whatsapp", "Setor", "Curso", "E-mail"];
     const thead = "<thead><tr>" + columns.map((c) => "<th>" + escapeHtml(c) + "</th>").join("") + "</tr></thead>";
     const tbody = "<tbody>" + previewRows.map((row) => {
       return "<tr>" + columns.map((col) => "<td>" + escapeHtml(row[col]) + "</td>").join("") + "</tr>";

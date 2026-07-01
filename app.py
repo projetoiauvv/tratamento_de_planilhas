@@ -28,6 +28,7 @@ from processing import (
     TARGET_FIELDS,
     normalizar_setor_outros,
     process_dataframe,
+    process_hubspot_dataframe,
     read_table,
 )
 
@@ -111,6 +112,7 @@ def _get_stored_path(file_id: str):
 def _validate_payload(data: dict):
     """Valida o mapeamento enviado pelo site e devolve arquivo/mapeamento/setor."""
     file_id = data.get("file_id")
+    mode = data.get("mode", "padrao")
     mapping = data.get("mapping") or {}
     setor = data.get("setor")
     setor_outros = data.get("setor_outros")
@@ -121,6 +123,9 @@ def _validate_payload(data: dict):
     stored_path = _get_stored_path(file_id)
     if not stored_path:
         return None, None, None, "Arquivo expirado ou não encontrado. Envie novamente."
+
+    if mode == "hubspot":
+        return stored_path, None, None, None
 
     errors = []
     for field in TARGET_FIELDS:
@@ -156,7 +161,8 @@ def preview():
 
     try:
         df = read_table(stored_path)
-        result = process_dataframe(df, mapping, setor)
+        mode = data.get("mode", "padrao")
+        result = process_hubspot_dataframe(df) if mode == "hubspot" else process_dataframe(df, mapping, setor)
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": f"Erro ao pré-visualizar: {exc}"}), 400
 
@@ -180,7 +186,8 @@ def process():
 
     try:
         df = read_table(stored_path)
-        result = process_dataframe(df, mapping, setor)
+        mode = data.get("mode", "padrao")
+        result = process_hubspot_dataframe(df) if mode == "hubspot" else process_dataframe(df, mapping, setor)
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": f"Erro ao processar: {exc}"}), 400
 

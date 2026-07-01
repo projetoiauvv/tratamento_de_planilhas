@@ -5,7 +5,8 @@ Aplicativo web para tratamento automático de planilhas. A versão estática em 
 ## Funcionalidades
 
 - Aceita arquivos `.csv`, `.xlsx` e `.xls`.
-- Mapeamento interativo de colunas (estilo "Template Fields → Columns in your File"):
+- Escolha inicial entre **Base de dados HubSpot** (modelo fixo sem mapeamento) e **Base de dados padrão**.
+- Mapeamento interativo de colunas para a base padrão (estilo "Template Fields → Columns in your File"):
   - **Nome completo** *(obrigatório)* — dividido em `Nome` e `Sobrenome`.
   - **Whatsapp (com DDD)** *(obrigatório)* — normalizado.
   - **Setor** *(obrigatório)* — escolhido a partir de uma lista fixa.
@@ -13,8 +14,9 @@ Aplicativo web para tratamento automático de planilhas. A versão estática em 
   - **e-mail** *(opcional)*.
 - Pré-seleção automática de colunas com nomes parecidos.
 - Pré-visualização no site das primeiras linhas já tratadas antes do download.
-- Saída em `.xlsx` com as colunas: `Nome`, `Sobrenome`, `Whatsapp`, `Setor`,
+- Saída padrão em `.xlsx` com as colunas: `Nome`, `Sobrenome`, `Whatsapp`, `Setor`,
   `Curso`, `E-mail`.
+- Saída HubSpot em `.xlsx` também inclui `Proprietário do negócio` e `Id Hub`, usando `Negócio ID` como origem.
 
 ## Regras de tratamento
 
@@ -40,6 +42,10 @@ Sobrenome = PRI.MAIÚSCULA(ARRUMAR(DIREITA(C2;NÚM.CARACT(C2)-PROCURAR(" ";C2)))
 
 - `Nome`: primeira palavra, com inicial maiúscula.
 - `Sobrenome`: restante após o primeiro espaço, com iniciais maiúsculas (vazio se não houver espaço).
+
+### Base de dados HubSpot
+
+Quando a opção **Base de dados HubSpot** é escolhida, não há mapeamento manual. O app espera as colunas fixas `Nome`, `Sobrenome`, `Número de telefone`, `E-mail`, `Nome do Curso`, `Proprietário do negócio` e `Negócio ID`. O setor é sempre gravado como `COMERCIAL`, `Número de telefone` recebe o mesmo tratamento de Whatsapp, e `Negócio ID` sai como `Id Hub`.
 
 ### Setores
 
