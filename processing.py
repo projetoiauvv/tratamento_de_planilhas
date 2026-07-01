@@ -39,7 +39,20 @@ SETORES = [
     {"label": "Nace", "value": "NACE"},
     {"label": "Policlínica", "value": "POLICLINICA"},
     {"label": "Hospital veterinário", "value": "VETERINARIO"},
+    {"label": "Outros", "value": "OUTROS"},
 ]
+
+SETOR_OUTROS_VALUE = "OUTROS"
+
+HUBSPOT_COLUMNS = {
+    "nome": "Nome",
+    "sobrenome": "Sobrenome",
+    "whatsapp": "Número de telefone",
+    "email": "E-mail",
+    "curso": "Nome do Curso",
+    "proprietario": "Proprietário do negócio",
+    "id_hub": "Negócio ID",
+}
 
 
 def read_table(path: str) -> pd.DataFrame:
@@ -130,6 +143,11 @@ def tratar_sobrenome(value) -> str:
     return _pri_maiuscula(resto)
 
 
+def normalizar_setor_outros(value) -> str:
+    """Normaliza o setor digitado pelo usuário quando a opção Outros é usada."""
+    return _to_text(value).strip().upper()
+
+
 def process_dataframe(df: pd.DataFrame, mapping: dict, setor: str) -> pd.DataFrame:
     """Aplica o tratamento e devolve o DataFrame final.
 
@@ -155,5 +173,24 @@ def process_dataframe(df: pd.DataFrame, mapping: dict, setor: str) -> pd.DataFra
     out["Setor"] = setor
     out["Curso"] = _serie(col_curso).apply(_to_text)
     out["E-mail"] = _serie(col_email).apply(_to_text)
+
+    return out
+
+
+def process_hubspot_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Trata a base HubSpot usando os nomes fixos de coluna do modelo."""
+    missing = [col for col in HUBSPOT_COLUMNS.values() if col not in df.columns]
+    if missing:
+        raise ValueError("Colunas obrigatórias da base HubSpot ausentes: " + ", ".join(missing))
+
+    out = pd.DataFrame()
+    out["Nome"] = df[HUBSPOT_COLUMNS["nome"]].apply(lambda value: _pri_maiuscula(_to_text(value).strip()))
+    out["Sobrenome"] = df[HUBSPOT_COLUMNS["sobrenome"]].apply(lambda value: _pri_maiuscula(_to_text(value).strip()))
+    out["Whatsapp"] = df[HUBSPOT_COLUMNS["whatsapp"]].apply(tratar_whatsapp)
+    out["Setor"] = "COMERCIAL"
+    out["Curso"] = df[HUBSPOT_COLUMNS["curso"]].apply(_to_text)
+    out["E-mail"] = df[HUBSPOT_COLUMNS["email"]].apply(_to_text)
+    out["Proprietário do negócio"] = df[HUBSPOT_COLUMNS["proprietario"]].apply(_to_text)
+    out["Id Hub"] = df[HUBSPOT_COLUMNS["id_hub"]].apply(_to_text)
 
     return out
