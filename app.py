@@ -23,9 +23,12 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from processing import (
+    SETOR_OUTROS_VALUE,
     SETORES,
     TARGET_FIELDS,
+    normalizar_setor_outros,
     process_dataframe,
+    process_hubspot_dataframe,
     read_table,
 )
 
@@ -97,28 +100,33 @@ def upload():
     )
 
 
-@app.route("/process", methods=["POST"])
-def process():
-    """Aplica o tratamento e devolve a planilha resultante (XLSX)."""
-    data = request.get_json(silent=True) or {}
-    file_id = data.get("file_id")
-    mapping = data.get("mapping") or {}
-    setor = data.get("setor")
-
-    if not file_id:
-        return jsonify({"error": "Sessão inválida. Envie o arquivo novamente."}), 400
-
-    # Localiza o arquivo salvo (independente da extensão).
-    stored_path = None
+def _get_stored_path(file_id: str):
+    """Localiza o arquivo salvo (independente da extensão)."""
     for ext in ALLOWED_EXTENSIONS:
         candidate = os.path.join(UPLOAD_DIR, f"{file_id}{ext}")
         if os.path.exists(candidate):
-            stored_path = candidate
-            break
-    if not stored_path:
-        return jsonify({"error": "Arquivo expirado ou não encontrado. Envie novamente."}), 400
+            return candidate
+    return None
 
-    # Validações dos campos obrigatórios.
+
+def _validate_payload(data: dict):
+    """Valida o mapeamento enviado pelo site e devolve arquivo/mapeamento/setor."""
+    file_id = data.get("file_id")
+    mode = data.get("mode", "padrao")
+    mapping = data.get("mapping") or {}
+    setor = data.get("setor")
+    setor_outros = data.get("setor_outros")
+
+    if not file_id:
+        return None, None, None, "Sessão inválida. Envie o arquivo novamente."
+
+    stored_path = _get_stored_path(file_id)
+    if not stored_path:
+        return None, None, None, "Arquivo expirado ou não encontrado. Envie novamente."
+
+    if mode == "hubspot":
+        return stored_path, None, None, None
+
     errors = []
     for field in TARGET_FIELDS:
         if field["required"] and field["key"] != "setor":
@@ -130,13 +138,56 @@ def process():
         errors.append("O campo 'Setor' é obrigatório.")
     elif setor not in valid_setores:
         errors.append("Setor inválido.")
+    elif setor == SETOR_OUTROS_VALUE:
+        setor_personalizado = normalizar_setor_outros(setor_outros)
+        if not setor_personalizado:
+            errors.append("Digite o nome do setor quando selecionar 'Outros'.")
+        else:
+            setor = setor_personalizado
 
     if errors:
-        return jsonify({"error": " ".join(errors)}), 400
+        return None, None, None, " ".join(errors)
+
+    return stored_path, mapping, setor, None
+
+
+@app.route("/preview", methods=["POST"])
+def preview():
+    """Mostra no site uma prévia da planilha já tratada."""
+    data = request.get_json(silent=True) or {}
+    stored_path, mapping, setor, error = _validate_payload(data)
+    if error:
+        return jsonify({"error": error}), 400
 
     try:
         df = read_table(stored_path)
-        result = process_dataframe(df, mapping, setor)
+        mode = data.get("mode", "padrao")
+        result = process_hubspot_dataframe(df) if mode == "hubspot" else process_dataframe(df, mapping, setor)
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({"error": f"Erro ao pré-visualizar: {exc}"}), 400
+
+    preview_df = result.head(10).fillna("")
+    return jsonify(
+        {
+            "columns": [str(c) for c in preview_df.columns],
+            "rows": preview_df.astype(str).values.tolist(),
+            "total_rows": int(len(result)),
+        }
+    )
+
+
+@app.route("/process", methods=["POST"])
+def process():
+    """Aplica o tratamento e devolve a planilha resultante (XLSX)."""
+    data = request.get_json(silent=True) or {}
+    stored_path, mapping, setor, error = _validate_payload(data)
+    if error:
+        return jsonify({"error": error}), 400
+
+    try:
+        df = read_table(stored_path)
+        mode = data.get("mode", "padrao")
+        result = process_hubspot_dataframe(df) if mode == "hubspot" else process_dataframe(df, mapping, setor)
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": f"Erro ao processar: {exc}"}), 400
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tratamento de Planilhas</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="static/css/style.css" />
 </head>
 <body>
   <div class="container">
@@ -12,11 +12,10 @@
       <h1>Tratamento de Planilhas</h1>
       <p class="subtitle">
         Envie um arquivo <strong>.csv</strong> ou <strong>.xlsx</strong>, mapeie as colunas
-        e baixe a planilha tratada.
+        e baixe a planilha tratada diretamente nesta página.
       </p>
     </header>
 
-    <!-- Etapa 1: upload -->
     <section id="step-mode" class="card">
       <h2><span class="step-num">1</span> Escolher tipo de base</h2>
       <div class="mode-options">
@@ -42,12 +41,11 @@
       <div id="dropzone" class="dropzone">
         <input type="file" id="file-input" accept=".csv,.xlsx,.xls" hidden />
         <p class="dz-text">Arraste o arquivo aqui ou <button type="button" id="browse-btn" class="link-btn">selecione</button></p>
-        <p class="dz-hint">Formatos aceitos: CSV, XLSX, XLS &middot; até 25 MB</p>
+        <p class="dz-hint">Formatos aceitos: CSV, XLSX, XLS &middot; processamento feito no navegador</p>
       </div>
       <div id="file-info" class="file-info hidden"></div>
     </section>
 
-    <!-- Etapa 2: mapeamento -->
     <section id="step-map" class="card hidden">
       <h2><span class="step-num">3</span> Mapear colunas</h2>
       <div class="table-head">
@@ -60,14 +58,13 @@
         <strong>Tratamentos feitos no site:</strong>
         <ul>
           <li>Nome completo vira <strong>Nome</strong> e <strong>Sobrenome</strong>.</li>
-          <li>Whatsapp remove caracteres como +, espaços, parênteses e hífen, e adiciona 55 quando faltar.</li>
+          <li>Whatsapp remove +, espaços, parênteses e hífen, e adiciona 55 quando faltar.</li>
           <li>Setor grava o valor padronizado ou o texto digitado em Outros.</li>
           <li>No modo HubSpot, o mapeamento é automático e o setor sempre será COMERCIAL.</li>
         </ul>
       </div>
     </section>
 
-    <!-- Etapa 3: prévia -->
     <section id="step-preview" class="card hidden">
       <h2><span class="step-num">4</span> Pré-visualizar no site</h2>
       <p class="subtitle">Confira as primeiras linhas já tratadas antes de baixar a planilha.</p>
@@ -75,7 +72,6 @@
       <div id="preview-area" class="preview-area hidden"></div>
     </section>
 
-    <!-- Etapa 4: processar -->
     <section id="step-process" class="card hidden">
       <h2><span class="step-num">5</span> Gerar planilha tratada</h2>
       <button type="button" id="process-btn" class="primary-btn">Tratar e baixar (.xlsx)</button>
@@ -84,13 +80,7 @@
     <div id="message" class="message hidden"></div>
   </div>
 
-  <!-- Dados injetados pelo backend -->
-  <script>
-    window.APP_DATA = {
-      targetFields: {{ target_fields | tojson }},
-      setores: {{ setores | tojson }}
-    };
-  </script>
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="static/js/browser-app.js"></script>
 </body>
 </html>
