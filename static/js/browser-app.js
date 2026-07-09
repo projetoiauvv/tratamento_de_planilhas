@@ -244,12 +244,13 @@
     return state.rows.map((row) => ({
       Nome: priMaiuscula(toText(row["Nome"]).trim()),
       Sobrenome: priMaiuscula(toText(row["Sobrenome"]).trim()),
-      Whatsapp: tratarWhatsapp(row["Número de telefone"]),
+      "WhatsApp number": tratarWhatsapp(row["Número de telefone"]),
       Setor: "COMERCIAL",
-      Curso: toText(row["Nome do Curso"]),
+      curso_aluno: toText(row["Nome do Curso"]),
       "E-mail": toText(row["E-mail"]),
-      "Proprietário do negócio": toText(row["Proprietário do negócio"]),
-      "Id Hub": toText(row["Negócio ID"]),
+      atribuicao: toText(row["Proprietário do negócio"]),
+      id_hub: toText(row["Negócio ID"]),
+      Etiqueta: toText(row["etiqueta"]),
     }));
   }
 
@@ -262,6 +263,7 @@
       "Nome do Curso",
       "Proprietário do negócio",
       "Negócio ID",
+      "etiqueta",
     ];
     const missing = requiredColumns.filter((column) => !state.columns.includes(column));
     if (missing.length) {
@@ -302,7 +304,7 @@
   function renderPreview(rows) {
     const previewRows = rows.slice(0, 10);
     const columns = state.mode === "hubspot"
-      ? ["Nome", "Sobrenome", "Whatsapp", "Setor", "Curso", "E-mail", "Proprietário do negócio", "Id Hub"]
+      ? ["Nome", "Sobrenome", "WhatsApp number", "Setor", "curso_aluno", "E-mail", "atribuicao", "id_hub", "Etiqueta"]
       : ["Nome", "Sobrenome", "Whatsapp", "Setor", "Curso", "E-mail"];
     const thead = "<thead><tr>" + columns.map((c) => "<th>" + escapeHtml(c) + "</th>").join("") + "</tr></thead>";
     const tbody = "<tbody>" + previewRows.map((row) => {

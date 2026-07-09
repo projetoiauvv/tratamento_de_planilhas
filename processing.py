@@ -52,6 +52,7 @@ HUBSPOT_COLUMNS = {
     "curso": "Nome do Curso",
     "proprietario": "Proprietário do negócio",
     "id_hub": "Negócio ID",
+    "etiqueta": "etiqueta",
 }
 
 
@@ -186,11 +187,12 @@ def process_hubspot_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     out = pd.DataFrame()
     out["Nome"] = df[HUBSPOT_COLUMNS["nome"]].apply(lambda value: _pri_maiuscula(_to_text(value).strip()))
     out["Sobrenome"] = df[HUBSPOT_COLUMNS["sobrenome"]].apply(lambda value: _pri_maiuscula(_to_text(value).strip()))
-    out["Whatsapp"] = df[HUBSPOT_COLUMNS["whatsapp"]].apply(tratar_whatsapp)
+    out["WhatsApp number"] = df[HUBSPOT_COLUMNS["whatsapp"]].apply(tratar_whatsapp)
     out["Setor"] = "COMERCIAL"
-    out["Curso"] = df[HUBSPOT_COLUMNS["curso"]].apply(_to_text)
+    out["curso_aluno"] = df[HUBSPOT_COLUMNS["curso"]].apply(_to_text)
     out["E-mail"] = df[HUBSPOT_COLUMNS["email"]].apply(_to_text)
-    out["Proprietário do negócio"] = df[HUBSPOT_COLUMNS["proprietario"]].apply(_to_text)
-    out["Id Hub"] = df[HUBSPOT_COLUMNS["id_hub"]].apply(_to_text)
+    out["atribuicao"] = df[HUBSPOT_COLUMNS["proprietario"]].apply(_to_text)
+    out["id_hub"] = df[HUBSPOT_COLUMNS["id_hub"]].apply(_to_text)
+    out["Etiqueta"] = df[HUBSPOT_COLUMNS["etiqueta"]].apply(_to_text)
 
     return out
