@@ -85,6 +85,46 @@ def test_process_dataframe():
     assert out.loc[1, "Sobrenome"] == ""
 
 
+def test_normalizar_setor_outros():
+    from processing import normalizar_setor_outros
+
+    assert normalizar_setor_outros("  atendimento especial ") == "ATENDIMENTO ESPECIAL"
+    assert normalizar_setor_outros(None) == ""
+
+
+def test_process_hubspot_dataframe():
+    from processing import process_hubspot_dataframe
+
+    df = pd.DataFrame(
+        {
+            "Nome": ["ana"],
+            "Sobrenome": ["maria"],
+            "Número de telefone": ["(27) 99999-8888"],
+            "E-mail": ["ana@example.com"],
+            "Nome do Curso": ["Direito"],
+            "Proprietário do negócio": ["João Dono"],
+            "Negócio ID": ["12345"],
+        }
+    )
+
+    out = process_hubspot_dataframe(df)
+
+    assert list(out.columns) == [
+        "Nome",
+        "Sobrenome",
+        "WhatsApp number",
+        "Setor",
+        "curso_aluno",
+        "E-mail",
+        "atribuicao",
+        "id_hub",
+    ]
+    assert out.loc[0, "Nome"] == "Ana"
+    assert out.loc[0, "Sobrenome"] == "Maria"
+    assert out.loc[0, "WhatsApp number"] == "5527999998888"
+    assert out.loc[0, "Setor"] == "COMERCIAL"
+    assert out.loc[0, "id_hub"] == "12345"
+
 if __name__ == "__main__":
     import sys
 
