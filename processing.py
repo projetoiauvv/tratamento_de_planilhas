@@ -52,7 +52,6 @@ HUBSPOT_COLUMNS = {
     "curso": "Nome do Curso",
     "proprietario": "Proprietário do negócio",
     "id_hub": "Negócio ID",
-    "etiqueta": "etiqueta",
 }
 
 
@@ -193,6 +192,5 @@ def process_hubspot_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     out["E-mail"] = df[HUBSPOT_COLUMNS["email"]].apply(_to_text)
     out["atribuicao"] = df[HUBSPOT_COLUMNS["proprietario"]].apply(_to_text)
     out["id_hub"] = df[HUBSPOT_COLUMNS["id_hub"]].apply(_to_text)
-    out["Etiqueta"] = df[HUBSPOT_COLUMNS["etiqueta"]].apply(_to_text)
 
     return out

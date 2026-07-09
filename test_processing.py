@@ -104,7 +104,6 @@ def test_process_hubspot_dataframe():
             "Nome do Curso": ["Direito"],
             "Proprietário do negócio": ["João Dono"],
             "Negócio ID": ["12345"],
-            "etiqueta": ["VIP"],
         }
     )
 
@@ -119,14 +118,12 @@ def test_process_hubspot_dataframe():
         "E-mail",
         "atribuicao",
         "id_hub",
-        "Etiqueta",
     ]
     assert out.loc[0, "Nome"] == "Ana"
     assert out.loc[0, "Sobrenome"] == "Maria"
     assert out.loc[0, "WhatsApp number"] == "5527999998888"
     assert out.loc[0, "Setor"] == "COMERCIAL"
     assert out.loc[0, "id_hub"] == "12345"
-    assert out.loc[0, "Etiqueta"] == "VIP"
 
 if __name__ == "__main__":
     import sys

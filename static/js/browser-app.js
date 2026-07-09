@@ -250,7 +250,6 @@
       "E-mail": toText(row["E-mail"]),
       atribuicao: toText(row["Proprietário do negócio"]),
       id_hub: toText(row["Negócio ID"]),
-      Etiqueta: toText(row["etiqueta"]),
     }));
   }
 
@@ -263,7 +262,6 @@
       "Nome do Curso",
       "Proprietário do negócio",
       "Negócio ID",
-      "etiqueta",
     ];
     const missing = requiredColumns.filter((column) => !state.columns.includes(column));
     if (missing.length) {
@@ -304,7 +302,7 @@
   function renderPreview(rows) {
     const previewRows = rows.slice(0, 10);
     const columns = state.mode === "hubspot"
-      ? ["Nome", "Sobrenome", "WhatsApp number", "Setor", "curso_aluno", "E-mail", "atribuicao", "id_hub", "Etiqueta"]
+      ? ["Nome", "Sobrenome", "WhatsApp number", "Setor", "curso_aluno", "E-mail", "atribuicao", "id_hub"]
       : ["Nome", "Sobrenome", "Whatsapp", "Setor", "Curso", "E-mail"];
     const thead = "<thead><tr>" + columns.map((c) => "<th>" + escapeHtml(c) + "</th>").join("") + "</tr></thead>";
     const tbody = "<tbody>" + previewRows.map((row) => {

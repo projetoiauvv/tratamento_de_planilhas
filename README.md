@@ -16,7 +16,7 @@ Aplicativo web para tratamento automático de planilhas. A versão estática em 
 - Pré-visualização no site das primeiras linhas já tratadas antes do download.
 - Saída padrão em `.xlsx` com as colunas: `Nome`, `Sobrenome`, `Whatsapp`, `Setor`,
   `Curso`, `E-mail`.
-- Saída HubSpot em `.xlsx` também inclui `atribuicao`, `id_hub` e `Etiqueta`, usando `Proprietário do negócio`, `Negócio ID` e `etiqueta` como origem.
+- Saída HubSpot em `.xlsx` também inclui `atribuicao` e `id_hub`, usando `Proprietário do negócio` e `Negócio ID` como origem.
 
 ## Regras de tratamento
 
@@ -45,7 +45,7 @@ Sobrenome = PRI.MAIÚSCULA(ARRUMAR(DIREITA(C2;NÚM.CARACT(C2)-PROCURAR(" ";C2)))
 
 ### Base de dados HubSpot
 
-Quando a opção **Base de dados HubSpot** é escolhida, não há mapeamento manual. O app espera as colunas fixas `Nome`, `Sobrenome`, `Número de telefone`, `E-mail`, `Nome do Curso`, `Proprietário do negócio`, `Negócio ID` e `etiqueta`. O setor é sempre gravado como `COMERCIAL`, `Número de telefone` recebe o mesmo tratamento de Whatsapp e sai como `WhatsApp number`, `Nome do Curso` sai como `curso_aluno`, `Proprietário do negócio` sai como `atribuicao`, `Negócio ID` sai como `id_hub`, e `etiqueta` sai como `Etiqueta`.
+Quando a opção **Base de dados HubSpot** é escolhida, não há mapeamento manual. O app espera as colunas fixas `Nome`, `Sobrenome`, `Número de telefone`, `E-mail`, `Nome do Curso`, `Proprietário do negócio` e `Negócio ID`. O setor é sempre gravado como `COMERCIAL`, `Número de telefone` recebe o mesmo tratamento de Whatsapp e sai como `WhatsApp number`, `Nome do Curso` sai como `curso_aluno`, `Proprietário do negócio` sai como `atribuicao`, e `Negócio ID` sai como `id_hub`.
 
 ### Setores
 
