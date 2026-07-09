@@ -66,7 +66,7 @@ Quando a opção **Base de dados HubSpot** é escolhida, não há mapeamento man
 
 ### Site estático na raiz
 
-Abra `index.html` diretamente ou publique a raiz da branch `main` no GitHub Pages. Essa é a página que deve aparecer em vez do README.
+Abra `index.html` diretamente ou publique a raiz da branch `main` no GitHub Pages. Essa é a página que deve aparecer em vez do README. O arquivo `.nojekyll` fica na raiz para impedir que o GitHub Pages tente processar os templates Flask/Jinja como Liquid durante o deploy.
 
 ### Servidor Flask opcional
 
@@ -92,6 +92,7 @@ python test_processing.py
 ```
 app.py              # rotas Flask (upload / processamento)
 processing.py       # leitura e tratamento das planilhas
+.nojekyll           # desativa o build Jekyll no GitHub Pages
 index.html          # site estático para GitHub Pages/raiz da branch main
 templates/index.html
 static/css/style.css
