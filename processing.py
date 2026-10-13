@@ -39,7 +39,20 @@ SETORES = [
     {"label": "Nace", "value": "NACE"},
     {"label": "Policlínica", "value": "POLICLINICA"},
     {"label": "Hospital veterinário", "value": "VETERINARIO"},
+    {"label": "Outros", "value": "OUTROS"},
 ]
+
+SETOR_OUTROS_VALUE = "OUTROS"
+
+HUBSPOT_COLUMNS = {
+    "nome": "Nome",
+    "sobrenome": "Sobrenome",
+    "whatsapp": "Número de telefone",
+    "email": "E-mail",
+    "curso": "Nome do Curso",
+    "proprietario": "Proprietário do negócio",
+    "id_hub": "Negócio ID",
+}
 
 
 def read_table(path: str) -> pd.DataFrame:
@@ -130,10 +143,21 @@ def tratar_sobrenome(value) -> str:
     return _pri_maiuscula(resto)
 
 
-def process_dataframe(df: pd.DataFrame, mapping: dict, setor: str) -> pd.DataFrame:
+def normalizar_setor_outros(value) -> str:
+    """Normaliza o setor digitado pelo usuário quando a opção Outros é usada."""
+    return _to_text(value).strip().upper()
+
+
+def process_dataframe(
+    df: pd.DataFrame,
+    mapping: dict,
+    setor: str,
+    custom_columns: list[dict] | None = None,
+) -> pd.DataFrame:
     """Aplica o tratamento e devolve o DataFrame final.
 
-    Colunas de saída: Nome, Sobrenome, Whatsapp, Setor, Curso, E-mail.
+    Colunas de saída: Nome, Sobrenome, Whatsapp, Setor, curso_aluno, E-mail,
+    seguidas das colunas personalizadas solicitadas.
     """
     col_nome = mapping.get("nome_completo")
     col_whats = mapping.get("whatsapp")
@@ -153,7 +177,37 @@ def process_dataframe(df: pd.DataFrame, mapping: dict, setor: str) -> pd.DataFra
     out["Sobrenome"] = nome_src.apply(tratar_sobrenome)
     out["Whatsapp"] = whats_src.apply(tratar_whatsapp)
     out["Setor"] = setor
-    out["Curso"] = _serie(col_curso).apply(_to_text)
+    out["curso_aluno"] = _serie(col_curso).apply(_to_text)
     out["E-mail"] = _serie(col_email).apply(_to_text)
+
+    for custom in custom_columns or []:
+        source = str(custom.get("source", "")).strip()
+        output = str(custom.get("name", "")).strip()
+        if not source or not output:
+            continue
+        if output in out.columns:
+            raise ValueError(f"O nome de coluna '{output}' já está em uso.")
+        if source not in df.columns:
+            raise ValueError(f"A coluna de origem '{source}' não existe no arquivo.")
+        out[output] = df[source].apply(_to_text)
+
+    return out
+
+
+def process_hubspot_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Trata a base HubSpot usando os nomes fixos de coluna do modelo."""
+    missing = [col for col in HUBSPOT_COLUMNS.values() if col not in df.columns]
+    if missing:
+        raise ValueError("Colunas obrigatórias da base HubSpot ausentes: " + ", ".join(missing))
+
+    out = pd.DataFrame()
+    out["Nome"] = df[HUBSPOT_COLUMNS["nome"]].apply(lambda value: _pri_maiuscula(_to_text(value).strip()))
+    out["Sobrenome"] = df[HUBSPOT_COLUMNS["sobrenome"]].apply(lambda value: _pri_maiuscula(_to_text(value).strip()))
+    out["WhatsApp number"] = df[HUBSPOT_COLUMNS["whatsapp"]].apply(tratar_whatsapp)
+    out["Setor"] = "COMERCIAL"
+    out["curso_aluno"] = df[HUBSPOT_COLUMNS["curso"]].apply(_to_text)
+    out["E-mail"] = df[HUBSPOT_COLUMNS["email"]].apply(_to_text)
+    out["atribuicao"] = df[HUBSPOT_COLUMNS["proprietario"]].apply(_to_text)
+    out["id_hub"] = df[HUBSPOT_COLUMNS["id_hub"]].apply(_to_text)
 
     return out
