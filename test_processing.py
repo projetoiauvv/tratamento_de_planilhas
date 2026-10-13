@@ -74,7 +74,7 @@ def test_process_dataframe():
         "Sobrenome",
         "Whatsapp",
         "Setor",
-        "Curso",
+        "curso_aluno",
         "E-mail",
     ]
     assert out.loc[0, "Nome"] == "José"
@@ -83,6 +83,25 @@ def test_process_dataframe():
     assert out.loc[1, "Whatsapp"] == "5511999990000"
     assert (out["Setor"] == "COMERCIAL").all()
     assert out.loc[1, "Sobrenome"] == ""
+
+
+def test_process_dataframe_com_coluna_personalizada():
+    df = pd.DataFrame(
+        {
+            "nome": ["ana maria"],
+            "fone": ["27999998888"],
+            "cidade_origem": ["Vitória"],
+        }
+    )
+    out = process_dataframe(
+        df,
+        {"nome_completo": "nome", "whatsapp": "fone"},
+        "COMERCIAL",
+        [{"source": "cidade_origem", "name": "Cidade"}],
+    )
+
+    assert out.loc[0, "Cidade"] == "Vitória"
+    assert "curso_aluno" in out.columns
 
 
 def test_normalizar_setor_outros():

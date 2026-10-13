@@ -114,18 +114,34 @@ def _validate_payload(data: dict):
     file_id = data.get("file_id")
     mode = data.get("mode", "padrao")
     mapping = data.get("mapping") or {}
+    custom_columns = data.get("custom_columns") or []
     setor = data.get("setor")
     setor_outros = data.get("setor_outros")
 
     if not file_id:
-        return None, None, None, "Sessão inválida. Envie o arquivo novamente."
+        return None, None, None, None, "Sessão inválida. Envie o arquivo novamente."
 
     stored_path = _get_stored_path(file_id)
     if not stored_path:
-        return None, None, None, "Arquivo expirado ou não encontrado. Envie novamente."
+        return None, None, None, None, "Arquivo expirado ou não encontrado. Envie novamente."
 
     if mode == "hubspot":
-        return stored_path, None, None, None
+        return stored_path, None, None, None, None
+
+    if not isinstance(custom_columns, list):
+        return None, None, None, None, "Colunas personalizadas inválidas."
+    if any(not isinstance(column, dict) for column in custom_columns):
+        return None, None, None, None, "Colunas personalizadas inválidas."
+
+    custom_names = [str(column.get("name", "")).strip() for column in custom_columns]
+    incomplete = any(
+        not str(column.get("source", "")).strip() or not name
+        for column, name in zip(custom_columns, custom_names)
+    )
+    if incomplete:
+        return None, None, None, None, "Preencha a origem e o nome de todas as colunas adicionais."
+    if len(custom_names) != len(set(custom_names)):
+        return None, None, None, None, "Os nomes das colunas adicionais não podem se repetir."
 
     errors = []
     for field in TARGET_FIELDS:
@@ -146,23 +162,25 @@ def _validate_payload(data: dict):
             setor = setor_personalizado
 
     if errors:
-        return None, None, None, " ".join(errors)
+        return None, None, None, None, " ".join(errors)
 
-    return stored_path, mapping, setor, None
+    return stored_path, mapping, setor, custom_columns, None
 
 
 @app.route("/preview", methods=["POST"])
 def preview():
     """Mostra no site uma prévia da planilha já tratada."""
     data = request.get_json(silent=True) or {}
-    stored_path, mapping, setor, error = _validate_payload(data)
+    stored_path, mapping, setor, custom_columns, error = _validate_payload(data)
     if error:
         return jsonify({"error": error}), 400
 
     try:
         df = read_table(stored_path)
         mode = data.get("mode", "padrao")
-        result = process_hubspot_dataframe(df) if mode == "hubspot" else process_dataframe(df, mapping, setor)
+        result = process_hubspot_dataframe(df) if mode == "hubspot" else process_dataframe(
+            df, mapping, setor, custom_columns
+        )
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": f"Erro ao pré-visualizar: {exc}"}), 400
 
@@ -180,14 +198,16 @@ def preview():
 def process():
     """Aplica o tratamento e devolve a planilha resultante (XLSX)."""
     data = request.get_json(silent=True) or {}
-    stored_path, mapping, setor, error = _validate_payload(data)
+    stored_path, mapping, setor, custom_columns, error = _validate_payload(data)
     if error:
         return jsonify({"error": error}), 400
 
     try:
         df = read_table(stored_path)
         mode = data.get("mode", "padrao")
-        result = process_hubspot_dataframe(df) if mode == "hubspot" else process_dataframe(df, mapping, setor)
+        result = process_hubspot_dataframe(df) if mode == "hubspot" else process_dataframe(
+            df, mapping, setor, custom_columns
+        )
     except Exception as exc:  # noqa: BLE001
         return jsonify({"error": f"Erro ao processar: {exc}"}), 400
 

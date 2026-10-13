@@ -12,12 +12,16 @@
   const stepPreview = document.getElementById("step-preview");
   const stepProcess = document.getElementById("step-process");
   const mapRows = document.getElementById("map-rows");
+  const customColumns = document.getElementById("custom-columns");
+  const addCustomColumnBtn = document.getElementById("add-custom-column");
   const previewBtn = document.getElementById("preview-btn");
   const previewArea = document.getElementById("preview-area");
   const processBtn = document.getElementById("process-btn");
   const messageEl = document.getElementById("message");
 
   let state = { fileId: null, columns: [], mode: getSelectedMode() };
+
+  addCustomColumnBtn.addEventListener("click", () => addCustomColumnRow());
 
   modeInputs.forEach((input) => {
     input.addEventListener("change", () => {
@@ -94,6 +98,7 @@
     stepMap.classList.toggle("hidden", isHubspot);
     if (isHubspot) {
       mapRows.innerHTML = "";
+      customColumns.innerHTML = "";
     } else {
       buildMapping();
     }
@@ -104,6 +109,7 @@
 
   function buildMapping() {
     mapRows.innerHTML = "";
+    customColumns.innerHTML = "";
     targetFields.forEach((field) => {
       const row = document.createElement("div");
       row.className = "map-row";
@@ -156,6 +162,28 @@
       }
       mapRows.appendChild(row);
     });
+  }
+
+  function addCustomColumnRow() {
+    const row = document.createElement("div");
+    row.className = "custom-column-row";
+    const source = document.createElement("select");
+    source.className = "custom-source";
+    source.appendChild(makeOption("", "Coluna do arquivo"));
+    state.columns.forEach((column) => source.appendChild(makeOption(column, column)));
+    const name = document.createElement("input");
+    name.type = "text";
+    name.className = "custom-name";
+    name.placeholder = "Nome desejado na saída";
+    name.maxLength = 100;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove-column-btn";
+    remove.textContent = "Remover";
+    remove.addEventListener("click", () => { row.remove(); resetPreview(); });
+    [source, name].forEach((element) => element.addEventListener("input", resetPreview));
+    row.append(source, name, remove);
+    customColumns.appendChild(row);
   }
 
   function toggleOtherSectorInput(row, select) {
@@ -236,7 +264,28 @@
       }
     });
 
-    return { valid, payload: { file_id: state.fileId, mode: state.mode, mapping, setor, setor_outros: setorOutros } };
+    const custom = [];
+    const reserved = ["Nome", "Sobrenome", "Whatsapp", "Setor", "curso_aluno", "E-mail"];
+    customColumns.querySelectorAll(".custom-column-row").forEach((row) => {
+      const source = row.querySelector(".custom-source");
+      const name = row.querySelector(".custom-name");
+      source.classList.remove("invalid");
+      name.classList.remove("invalid");
+      if (!source.value || !name.value.trim() || reserved.includes(name.value.trim())) {
+        if (!source.value) source.classList.add("invalid");
+        if (!name.value.trim() || reserved.includes(name.value.trim())) name.classList.add("invalid");
+        valid = false;
+      } else {
+        custom.push({ source: source.value, name: name.value.trim() });
+      }
+    });
+    const customNames = custom.map((column) => column.name);
+    if (new Set(customNames).size !== customNames.length) {
+      showMessage("Os nomes das colunas adicionais não podem se repetir.", "error");
+      valid = false;
+    }
+
+    return { valid, payload: { file_id: state.fileId, mode: state.mode, mapping, setor, setor_outros: setorOutros, custom_columns: custom } };
   }
 
   function resetPreview() {

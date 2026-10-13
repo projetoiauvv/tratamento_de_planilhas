@@ -31,12 +31,16 @@
   const stepPreview = document.getElementById("step-preview");
   const stepProcess = document.getElementById("step-process");
   const mapRows = document.getElementById("map-rows");
+  const customColumns = document.getElementById("custom-columns");
+  const addCustomColumnBtn = document.getElementById("add-custom-column");
   const previewBtn = document.getElementById("preview-btn");
   const previewArea = document.getElementById("preview-area");
   const processBtn = document.getElementById("process-btn");
   const messageEl = document.getElementById("message");
 
   let state = { filename: "", columns: [], rows: [], mode: getSelectedMode() };
+
+  addCustomColumnBtn.addEventListener("click", () => addCustomColumnRow());
 
   modeInputs.forEach((input) => {
     input.addEventListener("change", () => {
@@ -118,6 +122,7 @@
     stepMap.classList.toggle("hidden", isHubspot);
     if (isHubspot) {
       mapRows.innerHTML = "";
+      customColumns.innerHTML = "";
       validateHubspotColumns(false);
     } else {
       buildMapping();
@@ -128,6 +133,7 @@
 
   function buildMapping() {
     mapRows.innerHTML = "";
+    customColumns.innerHTML = "";
     targetFields.forEach((field) => {
       const row = document.createElement("div");
       row.className = "map-row";
@@ -172,6 +178,35 @@
       }
       mapRows.appendChild(row);
     });
+  }
+
+  function addCustomColumnRow() {
+    const row = document.createElement("div");
+    row.className = "custom-column-row";
+
+    const source = document.createElement("select");
+    source.className = "custom-source";
+    source.appendChild(makeOption("", "Coluna do arquivo"));
+    state.columns.forEach((column) => source.appendChild(makeOption(column, column)));
+
+    const name = document.createElement("input");
+    name.type = "text";
+    name.className = "custom-name";
+    name.placeholder = "Nome desejado na saída";
+    name.maxLength = 100;
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove-column-btn";
+    remove.textContent = "Remover";
+    remove.addEventListener("click", () => {
+      row.remove();
+      resetPreview();
+    });
+    [source, name].forEach((element) => element.addEventListener("input", resetPreview));
+
+    row.append(source, name, remove);
+    customColumns.appendChild(row);
   }
 
   function getSelectedMode() {
@@ -219,24 +254,49 @@
       }
     });
 
-    return { valid, mapping, setor };
+    const custom = [];
+    const reserved = ["Nome", "Sobrenome", "Whatsapp", "Setor", "curso_aluno", "E-mail"];
+    customColumns.querySelectorAll(".custom-column-row").forEach((row) => {
+      const source = row.querySelector(".custom-source");
+      const name = row.querySelector(".custom-name");
+      source.classList.remove("invalid");
+      name.classList.remove("invalid");
+      if (!source.value || !name.value.trim() || reserved.includes(name.value.trim())) {
+        if (!source.value) source.classList.add("invalid");
+        if (!name.value.trim() || reserved.includes(name.value.trim())) name.classList.add("invalid");
+        valid = false;
+      } else {
+        custom.push({ source: source.value, name: name.value.trim() });
+      }
+    });
+    const customNames = custom.map((column) => column.name);
+    if (new Set(customNames).size !== customNames.length) {
+      showMessage("Os nomes das colunas adicionais não podem se repetir.", "error");
+      valid = false;
+    }
+
+    return { valid, mapping, setor, customColumns: custom };
   }
 
-  function processRows(mapping, setor) {
+  function processRows(mapping, setor, extraColumns = []) {
     if (state.mode === "hubspot") {
       return processHubspotRows();
     }
 
     return state.rows.map((row) => {
       const nomeCompleto = row[mapping.nome_completo];
-      return {
+      const output = {
         Nome: tratarNome(nomeCompleto),
         Sobrenome: tratarSobrenome(nomeCompleto),
         Whatsapp: tratarWhatsapp(row[mapping.whatsapp]),
         Setor: setor,
-        Curso: mapping.curso ? toText(row[mapping.curso]) : "",
+        curso_aluno: mapping.curso ? toText(row[mapping.curso]) : "",
         "E-mail": mapping.email ? toText(row[mapping.email]) : "",
       };
+      extraColumns.forEach((custom) => {
+        output[custom.name] = toText(row[custom.source]);
+      });
+      return output;
     });
   }
 
@@ -275,23 +335,23 @@
 
   previewBtn.addEventListener("click", () => {
     clearMessage();
-    const { valid, mapping, setor } = getPayload();
+    const { valid, mapping, setor, customColumns: extraColumns } = getPayload();
     if (!valid) {
       showMessage("Preencha todos os campos obrigatórios (*) para ver a prévia.", "error");
       return;
     }
-    renderPreview(processRows(mapping, setor));
+    renderPreview(processRows(mapping, setor, extraColumns));
   });
 
   processBtn.addEventListener("click", () => {
     clearMessage();
-    const { valid, mapping, setor } = getPayload();
+    const { valid, mapping, setor, customColumns: extraColumns } = getPayload();
     if (!valid) {
       showMessage("Preencha todos os campos obrigatórios (*).", "error");
       return;
     }
 
-    const processedRows = processRows(mapping, setor);
+    const processedRows = processRows(mapping, setor, extraColumns);
     const worksheet = window.XLSX.utils.json_to_sheet(processedRows);
     const workbook = window.XLSX.utils.book_new();
     window.XLSX.utils.book_append_sheet(workbook, worksheet, "Planilha tratada");
@@ -303,7 +363,7 @@
     const previewRows = rows.slice(0, 10);
     const columns = state.mode === "hubspot"
       ? ["Nome", "Sobrenome", "WhatsApp number", "Setor", "curso_aluno", "E-mail", "atribuicao", "id_hub"]
-      : ["Nome", "Sobrenome", "Whatsapp", "Setor", "Curso", "E-mail"];
+      : Object.keys(rows[0] || {});
     const thead = "<thead><tr>" + columns.map((c) => "<th>" + escapeHtml(c) + "</th>").join("") + "</tr></thead>";
     const tbody = "<tbody>" + previewRows.map((row) => {
       return "<tr>" + columns.map((col) => "<td>" + escapeHtml(row[col]) + "</td>").join("") + "</tr>";

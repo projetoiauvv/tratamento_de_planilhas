@@ -54,10 +54,20 @@
       </div>
       <div id="map-rows"></div>
       <p class="legend"><span class="req">*</span> campo obrigatório</p>
+      <div class="custom-columns-section">
+        <div class="custom-columns-heading">
+          <div>
+            <strong>Colunas adicionais</strong>
+            <p>Copie uma coluna do arquivo e escolha o nome dela na planilha tratada.</p>
+          </div>
+          <button type="button" id="add-custom-column" class="secondary-btn compact-btn">+ Adicionar coluna</button>
+        </div>
+        <div id="custom-columns"></div>
+      </div>
       <div class="treatment-rules">
         <strong>Tratamentos feitos no site:</strong>
         <ul>
-          <li>Nome completo vira <strong>Nome</strong> e <strong>Sobrenome</strong>.</li>
+          <li>Nome completo vira <strong>Nome</strong> e <strong>Sobrenome</strong>; Curso sai como <strong>curso_aluno</strong>.</li>
           <li>Whatsapp remove +, espaços, parênteses e hífen, e adiciona 55 quando faltar.</li>
           <li>Setor grava o valor padronizado ou o texto digitado em Outros.</li>
           <li>No modo HubSpot, o mapeamento é automático e o setor sempre será COMERCIAL.</li>

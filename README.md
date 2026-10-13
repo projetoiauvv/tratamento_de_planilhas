@@ -15,7 +15,9 @@ Aplicativo web para tratamento automático de planilhas. A versão estática em 
 - Pré-seleção automática de colunas com nomes parecidos.
 - Pré-visualização no site das primeiras linhas já tratadas antes do download.
 - Saída padrão em `.xlsx` com as colunas: `Nome`, `Sobrenome`, `Whatsapp`, `Setor`,
-  `Curso`, `E-mail`.
+  `curso_aluno`, `E-mail`.
+- A base padrão permite copiar colunas adicionais do arquivo e definir livremente
+  o nome de cada uma na planilha tratada.
 - Saída HubSpot em `.xlsx` também inclui `atribuicao` e `id_hub`, usando `Proprietário do negócio` e `Negócio ID` como origem.
 
 ## Regras de tratamento
